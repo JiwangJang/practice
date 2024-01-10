@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user{
+  userid Int @id @default(autoincrement())
+  email String @db.VarChar(20)
+  password String @db.VarChar(100)
+  nickname String @db.Char(8)
+  image String @unique @db.Char(12)
+  isblocked Boolean @default(false)
+  blockreason String @db.VarChar(30)
+  // post테이블과 관계설정(1:n)
+  post post[]
+  // reporteduser테이블과 관계설정(1:n)
+  report reporteduser[]
+    // comment테이블과 관계설정(1:n)
+  comment comment[]
+    // post테이블과 관계설정 (n:m)
+  userlikepost post[] @relation("userlikepost") 
+}
+
+model post{
+  postid Int @id @default(autoincrement())
+  authorid Int
+  article String @db.Text
+  title String @db.VarChar(20)
+  category String @db.VarChar(6)
+  posttime DateTime @default(now())
+  view Int
+  like Int
+  isblocked Boolean @default(false)
+  blockreason String @db.VarChar(30)
+  // user테이블과 관계설정(1:n)
+  author user @relation(fields: [authorid], references: [userid])
+  // reportedpost테이블과 관계설정 (1:n)
+  reportedpost reportedpost[]
+  // comment테이블과 관계설정(1:n)
+  comment comment[]
+  // user테이블과 관계설정 (n:m)
+  userlikepost user[]  @relation("userlikepost")
+}
+
+model reporteduser{
+  reportid Int @id @default(autoincrement())
+  userid Int
+  reporterid Int
+  reason String @db.VarChar(200)
+  result String @db.VarChar(30)
+  isresolved Boolean @default(false)
+  // user테이블과 관계설정(1:n)
+  user user @relation(fields: [userid], references: [userid])
+}
+
+model reportedpost{
+  reportid Int @id @default(autoincrement())
+  postid Int
+  reporterid Int
+  reason String @db.VarChar(200)
+  result String @db.VarChar(30)
+  isresolved Boolean @default(false)
+  // post테이블과 관계설정(1:n)
+  post post @relation(fields: [postid], references: [postid])
+}
+
+model comment{
+  commentid Int @id @default(autoincrement())
+   postid Int
+   writerid Int
+   writetime DateTime @default(now())
+   isrecomment Boolean 
+   recommentid Int
+
+  //  post테이블과 관계설정(1:n)
+  post post @relation(fields: [postid], references: [postid])
+  //  user테이블과 관계설정(1:n)
+  user user @relation(fields: [writerid], references: [userid])
+}

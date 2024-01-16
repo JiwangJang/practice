@@ -1,14 +1,14 @@
 "use client";
 
-import { Flex } from "@chakra-ui/react";
+import { Flex, FlexProps } from "@chakra-ui/react";
 import { Dispatch, SetStateAction } from "react";
 
-interface Props {
+interface Props extends FlexProps {
   isSmall: boolean;
   checked: boolean;
   setChecked: Dispatch<SetStateAction<boolean>>;
   label: string;
-  onClick?: (() => void) | null;
+  onClick?: (() => void) | undefined;
   isReverse?: boolean;
 }
 
@@ -19,12 +19,14 @@ const CustomCheckbox = ({
   label,
   onClick,
   isReverse,
+  ...props
 }: Props) => {
   return (
     <Flex
       width={"100%"}
       justifyContent={isReverse ? "left" : "right"}
       marginTop={"4px"}
+      {...props}
     >
       <Flex
         cursor='pointer'

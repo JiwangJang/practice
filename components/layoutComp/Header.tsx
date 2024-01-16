@@ -19,6 +19,12 @@ const Header = () => {
           width={90}
           height={64}
           alt='서비스로고'
+          onClick={() =>
+            (window.location.href = `${window.location.origin}/recent`)
+          }
+          style={{
+            cursor: "pointer",
+          }}
         />
       </Box>
     </Flex>

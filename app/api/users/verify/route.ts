@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import getUuid from "@/libs/uuid";
 import transporter from "@/libs/mailConfig";
+import { PrismaClient } from "@prisma/client";
 
 interface CustomError extends Error {
   code?: string;
 }
+
+const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -13,6 +16,16 @@ export async function GET(req: NextRequest) {
     throw Error("EmailError");
   }
   try {
+    const userEmailList = await prisma.user.findMany({
+      select: {
+        email: true,
+      },
+    });
+
+    if (userEmailList.find(({ email }) => email === userEmail.split("@")[0])) {
+      return NextResponse.json({ isOk: false, msg: "redundant" });
+    }
+
     const uuid = getUuid();
     await transporter.sendMail({
       from: "jiwang917@naver.com",

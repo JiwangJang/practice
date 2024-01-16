@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = "mysql://root:fuckDruid1!@localhost:3306/yeosu-inner-mind-db"
 }
 
 model user{
@@ -15,9 +15,9 @@ model user{
   email String @db.VarChar(20)
   password String @db.VarChar(100)
   nickname String @db.Char(8)
-  image String @unique @db.Char(12)
+  image String @unique @db.Char(12) @default("default.svg")
   isblocked Boolean @default(false)
-  blockreason String @db.VarChar(30)
+  blockreason String @db.VarChar(30) @default("")
   // post테이블과 관계설정(1:n)
   post post[]
   // reporteduser테이블과 관계설정(1:n)

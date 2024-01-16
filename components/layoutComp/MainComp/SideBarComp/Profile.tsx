@@ -6,16 +6,17 @@ import LoginForm from "./ProfileComp/LoginForm";
 
 const Profile = () => {
   return (
-    <Center
+    <Box
       width={"100%"}
-      height={"318px"}
+      minHeight={"318px"}
       borderWidth={"1px"}
       borderColor={"BorderColor"}
       borderRadius={"10px"}
       paddingX={"38px"}
+      paddingY={"30px"}
     >
       <LoginForm />
-    </Center>
+    </Box>
   );
 };
 

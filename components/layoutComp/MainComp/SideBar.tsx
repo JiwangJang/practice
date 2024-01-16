@@ -5,7 +5,7 @@ import Button from "@/components/element/CustomButton";
 
 const SideBar = () => {
   return (
-    <Box width={"282px"} height={"884px"} marginRight={"20px"}>
+    <Box width={"282px"} minHeight={"884px"} marginRight={"20px"}>
       <Profile />
       <Button
         fontSize={"24px"}

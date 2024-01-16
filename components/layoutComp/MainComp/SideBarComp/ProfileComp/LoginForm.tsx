@@ -2,6 +2,7 @@
 
 import Button from "@/components/element/CustomButton";
 import CustomCheckbox from "@/components/element/CustomCheckbox";
+import { Link } from "@chakra-ui/next-js";
 import { Flex, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
@@ -25,7 +26,7 @@ const LoginForm = () => {
   const toSignUp = () => router.push("/register-form");
 
   return (
-    <FormControl>
+    <FormControl position={"relative"}>
       <FormLabel marginBottom={"4px"} fontFamily={"bold"}>
         아이디
       </FormLabel>
@@ -69,6 +70,30 @@ const LoginForm = () => {
       <Button height={"44px"} isGhost={true} onClick={toSignUp}>
         회원가입
       </Button>
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "end",
+          marginTop: "4px",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "Pretendard-Regular",
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => {
+            const top = window.innerHeight / 2 - 250;
+            const left = window.innerWidth / 2 - 300;
+            const options = `width=600, height=500, location=no, status=no, top=${top}, left=${left}`;
+            window.open("/password-find", "passwordFind", options);
+          }}
+        >
+          비밀번호찾기
+        </span>
+      </div>
     </FormControl>
   );
 };

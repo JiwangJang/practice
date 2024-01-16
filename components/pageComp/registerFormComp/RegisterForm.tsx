@@ -85,7 +85,10 @@ const RegisterForm = () => {
   const emailVerify = async () => {
     if (!(emailRef.current instanceof HTMLInputElement)) return;
     if (!emailRef.current.value) return alert("이메일을 입력해주세요");
-    alert("이메일을 발송했습니다. 1분정도 시간이 걸릴수 있습니다.");
+    if (!/[a-z0-9]+@naver.com/.test(emailRef.current.value))
+      return alert("공직자메일을 입력해주세요");
+
+    alert("이메일을 발송했습니다. 1분정도 걸릴수 있습니다.");
 
     const res = await fetch(
       `/api/users/verify?userEmail=${emailRef.current.value}`
@@ -108,9 +111,6 @@ const RegisterForm = () => {
           verifyCode.current = undefined;
         }
       }, 1000);
-      /**
-       * 인증되면 시간종료 없애는 기능 추가
-       */
     } else {
       switch (json.msg) {
         case "Internet":
@@ -118,6 +118,9 @@ const RegisterForm = () => {
           break;
         case "Not Sended":
           alert("메일주소를 다시 확인해주세요");
+          break;
+        case "redundant":
+          alert("메일 한개당 한개의 계정만 만들수 있습니다");
           break;
         default:
           alert("서버에서 에러가 발생했습니다. 잠시후 다시 시도해주세요");
@@ -134,6 +137,9 @@ const RegisterForm = () => {
         ...passCondition.current,
         email: true,
       };
+      if (!codeCountDownRef.current) return;
+      codeCountDownRef.current.innerText = `인증완료`;
+      clearInterval(intervalId.current);
     } else {
       setVerifyErrorObj({ error: true, msg: "인증번호가 다릅니다" });
       passCondition.current = {
@@ -164,15 +170,37 @@ const RegisterForm = () => {
   };
 
   const signUp = async () => {
-    console.log(passCondition.current);
-    // const result = await fetch("/api/users/signup", {
-    //   method: "POST",
-    //   headers: {
-    //     // 나중에 실제 회원가입 기능 구현시 form데이터 형식으로 바꾸기
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(data),
-    // });
+    const isAllPassed = Object.values(passCondition.current).indexOf(false);
+
+    if (
+      isAllPassed === -1 &&
+      nicknameRef.current instanceof HTMLInputElement &&
+      emailRef.current instanceof HTMLInputElement &&
+      pwCheckRef.current instanceof HTMLInputElement
+    ) {
+      const data = {
+        nickname: nicknameRef.current.value,
+        email: emailRef.current.value,
+        password: pwCheckRef.current.value,
+      };
+
+      const res = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+
+      console.log(json);
+      if (json.isOk) {
+        alert("회원가입이 완료됐습니다");
+        // 이후 nextAuth SignIn함수 호출
+      } else {
+        alert("잠시후 다시시도해주세요");
+      }
+    }
   };
 
   return (
@@ -200,8 +228,8 @@ const RegisterForm = () => {
         inputRef={nicknameRef}
       />
       <CustomInput
-        title='이메일(아이디)'
-        placeholder='인증받으실 이메일을 입력해주세요'
+        title='공직자메일(아이디)'
+        placeholder='인증받으실 공직자메일을 입력해주세요'
         buttonText={"인증번호발송"}
         buttonEvent={emailVerify}
         inputRef={emailRef}
@@ -217,7 +245,7 @@ const RegisterForm = () => {
       />
       <CustomInput
         title='비밀번호'
-        subTitle='비밀번호는 영문10자이하로 작성해주세요(특수문자, 한글 불가능)'
+        subTitle='비밀번호는 10자이하로 작성해주세요(영문, 숫자만 가능)'
         placeholder='사용하실 비밀번호를 입력해주세요'
         inputRef={pwRef}
         isText={pwCheck ? true : false}

@@ -48,7 +48,7 @@ const CustomInput = ({
       </Flex>
 
       <Flex
-        width={"540px"}
+        width={"100%"}
         height={"60px"}
         borderWidth={"1px"}
         borderRadius={"10px"}

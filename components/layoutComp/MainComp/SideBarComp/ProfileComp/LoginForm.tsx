@@ -2,14 +2,15 @@
 
 import Button from "@/components/element/CustomButton";
 import CustomCheckbox from "@/components/element/CustomCheckbox";
-import { Link } from "@chakra-ui/next-js";
-import { Flex, FormControl, FormLabel, Input } from "@chakra-ui/react";
+import CustomLoadingCircle from "@/components/element/CustomLoadingCircle";
+import { FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 
 const LoginForm = () => {
   const [checked, setChecked]: [boolean, Dispatch<SetStateAction<boolean>>] =
     useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const idRef = useRef<HTMLInputElement>(null);
   const pwRef = useRef<HTMLInputElement>(null);
@@ -23,7 +24,10 @@ const LoginForm = () => {
     console.log("서버로 전송", { id, pw });
   };
 
-  const toSignUp = () => router.push("/register-form");
+  const toSignUp = async () => {
+    setIsLoading(true);
+    router.push("/register-form");
+  };
 
   return (
     <FormControl position={"relative"}>
@@ -94,6 +98,7 @@ const LoginForm = () => {
           비밀번호찾기
         </span>
       </div>
+      {isLoading && <CustomLoadingCircle />}
     </FormControl>
   );
 };

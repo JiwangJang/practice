@@ -2,6 +2,7 @@ import Chakra from "@/components/chakraComp/ChakraProvider";
 import Fonts from "@/components/chakraComp/Fonts";
 import Footer from "@/components/layoutComp/Footer";
 import Header from "@/components/layoutComp/Header";
+import "./globals.css";
 
 export default function RootLayout({
   children,

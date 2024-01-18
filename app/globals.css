@@ -1,0 +1,6 @@
+@keyframes loading {
+  to {
+    stroke-dashoffset: -295px;
+    transform: rotate(360deg);
+  }
+}

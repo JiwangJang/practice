@@ -7,7 +7,7 @@ const Page = () => {
     <Box
       width={"80%"}
       margin={"auto"}
-      minHeight={410}
+      // minHeight={410}
       marginY={"20px"}
       borderColor={"borderColor"}
       borderWidth={1}

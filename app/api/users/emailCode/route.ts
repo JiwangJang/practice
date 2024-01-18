@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import getUuid from "@/libs/uuid";
 import transporter from "@/libs/mailConfig";
 import { PrismaClient } from "@prisma/client";
-
-interface CustomError extends Error {
-  code?: string;
-}
+import { kv } from "@vercel/kv";
 
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
-  const userEmail = searchParams.get("userEmail");
+  const userEmail: string | null = searchParams.get("userEmail");
+  const isChange: string | null = searchParams.get("isChange");
+
   if (!userEmail) {
     throw Error("EmailError");
   }
@@ -22,20 +21,29 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    if (userEmailList.find(({ email }) => email === userEmail.split("@")[0])) {
-      return NextResponse.json({ isOk: false, msg: "redundant" });
+    const existEmail: { email: String } | undefined = userEmailList.find(
+      ({ email }) => email === userEmail.split("@")[0]
+    );
+    if (existEmail) {
+      if (process.env.NODE_ENV === "production" && !isChange) {
+        return NextResponse.json({ isOk: false, msg: "redundant" });
+      }
+    } else if (!existEmail && isChange) {
+      return NextResponse.json({ isOk: false, msg: "notFound" });
     }
 
-    const uuid = getUuid();
+    const uuid = crypto.randomUUID();
     await transporter.sendMail({
       from: "jiwang917@naver.com",
       to: userEmail,
-      subject: "여수속마음서비스 인증번호입니다",
+      subject: "여수속마음서비스 인증코드입니다",
       html: `
         <h1 style="font-size: 30px; margin-bottom:20px;">인증번호안내</h1>
-        <p style="font-size: 20px;">귀하의 인증번호는 <b style="font-size: 22px;">${uuid}</b>입니다</p>
+        <p style="font-size: 20px;">귀하의 인증번호는 <b style="font-size: 22px;"}>${uuid}</b>입니다</p>
       `,
     });
+
+    await kv.set(userEmail.split("@")[0], uuid, { ex: 120 });
 
     return NextResponse.json({ isOk: true, verifyCode: uuid });
   } catch (error: any) {

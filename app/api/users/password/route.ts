@@ -1,11 +1,11 @@
-import { PrismaClient } from "@prisma/client";
+import { kv } from "@vercel/kv";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { kv } from "@vercel/kv";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function POST(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
     const req = await request.json();
     const userEmail = req.email.split("@")[0];
@@ -15,16 +15,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ isOk: false, msg: "needCode" });
     const hasedPw = bcrypt.hashSync(req.password, 10);
 
-    await prisma.user.create({
-      data: {
-        nickname: req.nickname,
+    await prisma.user.update({
+      where: {
         email: userEmail,
+      },
+      data: {
         password: hasedPw,
       },
     });
+
     return NextResponse.json({ isOk: true });
   } catch (error) {
-    console.log(error);
     return NextResponse.json({ isOk: false });
   }
 }

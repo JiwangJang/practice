@@ -26,6 +26,10 @@ const theme = extendTheme({
       body: {
         letterSpacing: "-0.03em",
       },
+      ".bgBlur": {
+        backdropFilter: "blur(8px)",
+        backgroundColor: "rgba(255, 255, 255, 0.5)", // 배경 색을 지정할 수 있습니다.
+      },
     },
   },
   components: {

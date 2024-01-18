@@ -12,10 +12,10 @@ datasource db {
 
 model user{
   userid Int @id @default(autoincrement())
-  email String @db.VarChar(20)
+  email String @db.VarChar(20) @unique
   password String @db.VarChar(100)
   nickname String @db.Char(8)
-  image String @unique @db.Char(12) @default("default.svg")
+  image String @db.Char(12) @default("default.svg")
   isblocked Boolean @default(false)
   blockreason String @db.VarChar(30) @default("")
   // post테이블과 관계설정(1:n)

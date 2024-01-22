@@ -1,31 +1,62 @@
 "use client";
 
+import { AuthContext } from "@/components/AuthProvider";
 import Button from "@/components/element/CustomButton";
 import CustomCheckbox from "@/components/element/CustomCheckbox";
 import CustomLoadingCircle from "@/components/element/CustomLoadingCircle";
+import loadingTest from "@/libs/loadingTest";
 import { FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useContext, useRef, useState } from "react";
 
 const LoginForm = () => {
   const [checked, setChecked]: [boolean, Dispatch<SetStateAction<boolean>>] =
     useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSignUpFormLoading, setIsSignUpFormLoading] = useState(false);
+  const [isSignInLoading, setIsSignInLoading] = useState(false);
   const router = useRouter();
   const idRef = useRef<HTMLInputElement>(null);
   const pwRef = useRef<HTMLInputElement>(null);
+  const { isAuthorized, setIsAuthorized } = useContext(AuthContext);
 
-  const signIn = () => {
+  const signIn = async () => {
     if (idRef.current == null || pwRef.current === null)
       return alert("내부오류가 생겼습니다. 새로고침해주세요");
     const id: string = idRef.current.value;
     const pw: string = pwRef.current.value;
+    setIsSignInLoading(true);
+    const res = await fetch("/api/users/signIn", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: id,
+        userPw: pw,
+      }),
+    });
 
-    console.log("서버로 전송", { id, pw });
+    const json = await res.json();
+
+    if (json.isOk) {
+      setIsAuthorized(true);
+    } else {
+      switch (json.msg) {
+        case "pwError":
+          alert("비밀번호를 확인해주세요");
+          break;
+        case "notFound":
+          alert("등록되지 않은 사용자입니다");
+          break;
+        default:
+          alert("서버에서 에러가 발생하였습니다, 잠시후 다시 시도해주세요");
+          break;
+      }
+    }
+
+    console.log(json);
+    setIsSignInLoading(false);
   };
 
   const toSignUp = async () => {
-    setIsLoading(true);
+    setIsSignUpFormLoading(true);
     router.push("/register-form");
   };
 
@@ -98,7 +129,8 @@ const LoginForm = () => {
           비밀번호찾기
         </span>
       </div>
-      {isLoading && <CustomLoadingCircle />}
+      {isSignUpFormLoading && <CustomLoadingCircle isBig={true} />}
+      {isSignInLoading && <CustomLoadingCircle isBig={false} />}
     </FormControl>
   );
 };

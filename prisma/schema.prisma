@@ -14,7 +14,7 @@ model user{
   userid Int @id @default(autoincrement())
   email String @db.VarChar(20) @unique
   password String @db.VarChar(100)
-  nickname String @db.Char(8)
+  nickname String @db.Char(8) @unique
   image String @db.Char(12) @default("default.svg")
   isblocked Boolean @default(false)
   blockreason String @db.VarChar(30) @default("")

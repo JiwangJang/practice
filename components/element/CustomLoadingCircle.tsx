@@ -2,15 +2,17 @@
 
 import { Center } from "@chakra-ui/react";
 
-const CustomLoadingCircle = () => {
+const CustomLoadingCircle = ({ isBig }: { isBig: boolean }) => {
   return (
     <Center
-      width={"100%"}
-      height={"100%"}
-      position={"fixed"}
+      position={isBig ? "fixed" : "absolute"}
       top={0}
       left={0}
-      className='bgBlur'
+      right={0}
+      bottom={0}
+      className={isBig ? "bgBlur" : ""}
+      borderRadius={isBig ? "" : "10px"}
+      bgColor={isBig ? "" : "white"}
     >
       <div
         style={{

@@ -4,3 +4,8 @@
     transform: rotate(360deg);
   }
 }
+
+input:disabled {
+  color: rgb(176, 176, 176);
+  background-color: white;
+}

@@ -8,24 +8,25 @@ const prisma = new PrismaClient();
 export async function PATCH(request: NextRequest) {
   try {
     const req = await request.json();
-    const userEmail = req.email.split("@")[0];
-    const serverVerifyCode = await kv.get(userEmail);
-
-    if (serverVerifyCode !== req.verifyCode)
+    const userId = req.email.split("@")[0];
+    const clientCode = Number(req.code);
+    const serverVerifyCode = await kv.get(userId);
+    if (serverVerifyCode !== clientCode)
       return NextResponse.json({ isOk: false, msg: "needCode" });
-    const hasedPw = bcrypt.hashSync(req.password, 10);
+    const hasedPw = bcrypt.hashSync(req.pw, 10);
 
     await prisma.user.update({
       where: {
-        email: userEmail,
+        email: userId,
       },
       data: {
         password: hasedPw,
       },
     });
-
+    await kv.del(userId);
     return NextResponse.json({ isOk: true });
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ isOk: false });
   }
 }

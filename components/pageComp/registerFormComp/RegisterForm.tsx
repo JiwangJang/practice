@@ -6,6 +6,8 @@ import { Flex, Text } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import AgreePart from "./RegisterFormComp/AgreePart";
 import CustomButton from "@/components/element/CustomButton";
+import { useRouter } from "next/navigation";
+import CustomLoadingCircle from "@/components/element/CustomLoadingCircle";
 
 export interface PassCondition {
   password: boolean;
@@ -24,6 +26,8 @@ const RegisterForm = () => {
     error: false,
     msg: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const pwRef = useRef<HTMLInputElement>(null);
   const pwCheckRef = useRef<HTMLInputElement>(null);
@@ -31,7 +35,6 @@ const RegisterForm = () => {
   const emailRef = useRef<HTMLInputElement>(null);
   const codeCountDownRef = useRef<HTMLDivElement>(null);
   const clientCodeRef = useRef<HTMLInputElement>(null);
-  const verifyCode = useRef<number | undefined>();
   const intervalId = useRef<NodeJS.Timeout>();
   const passCondition = useRef<PassCondition>({
     password: false,
@@ -40,6 +43,7 @@ const RegisterForm = () => {
     nickname: false,
     email: false,
   });
+  const isSend = useRef<boolean>(false);
 
   const nicknameCheck = async () => {
     if (!(nicknameRef.current instanceof HTMLInputElement)) return;
@@ -77,7 +81,9 @@ const RegisterForm = () => {
         nickname: false,
       };
     } else {
+      alert("입력하신 닉네임은 사용가능합니다");
       setNickErrorObj({ error: false, msg: "사용가능합니다" });
+      nicknameRef.current.disabled = true;
       passCondition.current = {
         ...passCondition.current,
         nickname: true,
@@ -85,14 +91,17 @@ const RegisterForm = () => {
     }
   };
 
-  const emailVerify = async () => {
+  const sendEmail = async () => {
     if (!(emailRef.current instanceof HTMLInputElement)) return;
     if (passCondition.current.email) return alert("이미인증 하셨습니다");
+    if (isSend.current) return alert("이미 발송했습니다");
     if (!emailRef.current.value) return alert("이메일을 입력해주세요");
     if (!/[a-z0-9]+@naver.com/.test(emailRef.current.value))
       return alert("공직자메일을 입력해주세요");
 
     alert("이메일을 발송했습니다. 1분정도 걸릴수 있습니다.");
+    isSend.current = true;
+    emailRef.current.disabled = true;
 
     const res = await fetch(
       `/api/users/emailCode?userEmail=${emailRef.current.value}`
@@ -102,17 +111,17 @@ const RegisterForm = () => {
     if (json.isOk) {
       const end = new Date().setMinutes(new Date().getMinutes() + 2);
       clearInterval(intervalId.current);
-      verifyCode.current = json.verifyCode;
       intervalId.current = setInterval(() => {
         const distance = (end - new Date().getTime()) / 1000;
-        if (!codeCountDownRef.current) return;
+        if (!codeCountDownRef.current || !emailRef.current) return;
         codeCountDownRef.current.innerText = `${Math.trunc(
           distance / 60
         )}분 ${Math.floor(distance % 60)}초 남았습니다.`;
         if (distance < 0) {
           codeCountDownRef.current.innerText = `제한시간이 종료됐습니다`;
+          emailRef.current.disabled = false;
+          isSend.current = false;
           clearInterval(intervalId.current);
-          verifyCode.current = undefined;
         }
       }, 1000);
     } else {
@@ -129,27 +138,35 @@ const RegisterForm = () => {
         default:
           alert("서버에서 에러가 발생했습니다. 잠시후 다시 시도해주세요");
       }
+      emailRef.current.disabled = false;
     }
   };
 
-  const verify = () => {
-    if (!(clientCodeRef.current instanceof HTMLInputElement)) return;
-    const clientCode = clientCodeRef.current.value;
-    if (clientCode == String(verifyCode.current)) {
-      setVerifyErrorObj({ error: false, msg: "인증번호가 일치합니다" });
-      passCondition.current = {
-        ...passCondition.current,
-        email: true,
-      };
+  const verify = async () => {
+    if (!clientCodeRef.current || !emailRef.current)
+      return alert("새로고침 부탁드립니다");
+    if (passCondition.current.email) return alert("이미인증 하셨습니다");
+
+    const result = await fetch("/api/users/emailCode/verify", {
+      method: "POST",
+      body: JSON.stringify({
+        code: clientCodeRef.current.value,
+        userId: emailRef.current.value,
+      }),
+    });
+
+    const json = await result.json();
+
+    if (json.isOk) {
       if (!codeCountDownRef.current) return;
-      codeCountDownRef.current.innerText = `인증완료`;
+      alert("인증번호가 일치합니다");
+      codeCountDownRef.current.innerText = "인증완료";
+      clientCodeRef.current.disabled = true;
+      passCondition.current.email = true;
+      setVerifyErrorObj({ error: false, msg: "인증완료" });
       clearInterval(intervalId.current);
     } else {
       setVerifyErrorObj({ error: true, msg: "인증번호가 다릅니다" });
-      passCondition.current = {
-        ...passCondition.current,
-        email: false,
-      };
     }
   };
 
@@ -174,6 +191,7 @@ const RegisterForm = () => {
   };
 
   const signUp = async () => {
+    setIsLoading(true);
     try {
       Object.keys(passCondition.current).forEach((test) => {
         if (!passCondition.current[test]) {
@@ -200,13 +218,14 @@ const RegisterForm = () => {
       if (
         nicknameRef.current instanceof HTMLInputElement &&
         emailRef.current instanceof HTMLInputElement &&
+        clientCodeRef.current instanceof HTMLInputElement &&
         pwCheckRef.current instanceof HTMLInputElement
       ) {
         const data = {
           nickname: nicknameRef.current.value,
           email: emailRef.current.value,
           password: pwCheckRef.current.value,
-          verifyCode: verifyCode.current,
+          verifyCode: clientCodeRef.current.value,
         };
 
         const res = await fetch("/api/users/signup", {
@@ -217,18 +236,17 @@ const RegisterForm = () => {
           body: JSON.stringify(data),
         });
         const json = await res.json();
-
-        if (json.isOk) {
-          alert(
-            "회원가입이 완료됐습니다, 향후 로그인시 @korea.kr는 입력안하셔야 합니다"
-          );
-          // 이후 nextAuth SignIn함수 호출
-        } else {
+        if (!json.isOk) {
+          setIsLoading(false);
           alert("잠시후 다시시도해주세요");
+        } else {
+          alert("향후 로그인시 @korea.kr은 입력하시면 안됩니다");
+          router.push("/recent", {});
         }
       }
     } catch (error) {
-      return;
+      setIsLoading(false);
+      return alert("잠시후 다시시도해주세요");
     }
   };
 
@@ -260,14 +278,15 @@ const RegisterForm = () => {
         title='공직자메일(아이디)'
         placeholder='인증받으실 공직자메일을 입력해주세요'
         buttonText={"인증코드발송"}
-        buttonEvent={emailVerify}
+        buttonEvent={sendEmail}
         inputRef={emailRef}
         subTitleRef={codeCountDownRef}
       />
       <CustomInput
         title='인증코드발송'
         placeholder='받으신 인증코드를 2분이내에 입력해주세요'
-        onChange={verify}
+        buttonEvent={verify}
+        buttonText={"인증하기"}
         errorObj={verifyErrorObj}
         inputRef={clientCodeRef}
       />
@@ -297,6 +316,7 @@ const RegisterForm = () => {
       <CustomButton height={"68px"} fontSize={"24px"} onClick={signUp}>
         회원등록하기
       </CustomButton>
+      {isLoading && <CustomLoadingCircle isBig={true} />}
     </Flex>
   );
 };

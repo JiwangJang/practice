@@ -24,15 +24,13 @@ export async function GET(req: NextRequest) {
     const existEmail: { email: String } | undefined = userEmailList.find(
       ({ email }) => email === userEmail.split("@")[0]
     );
-    if (existEmail) {
-      if (process.env.NODE_ENV === "production" && !isChange) {
-        return NextResponse.json({ isOk: false, msg: "redundant" });
-      }
+    if (existEmail && !isChange) {
+      return NextResponse.json({ isOk: false, msg: "redundant" });
     } else if (!existEmail && isChange) {
       return NextResponse.json({ isOk: false, msg: "notFound" });
     }
 
-    const uuid = crypto.randomUUID();
+    const uuid = getUuid();
     await transporter.sendMail({
       from: "jiwang917@naver.com",
       to: userEmail,
@@ -42,10 +40,9 @@ export async function GET(req: NextRequest) {
         <p style="font-size: 20px;">귀하의 인증번호는 <b style="font-size: 22px;"}>${uuid}</b>입니다</p>
       `,
     });
+    await kv.set(userEmail.split("@")[0], uuid, { ex: 125 });
 
-    await kv.set(userEmail.split("@")[0], uuid, { ex: 120 });
-
-    return NextResponse.json({ isOk: true, verifyCode: uuid });
+    return NextResponse.json({ isOk: true });
   } catch (error: any) {
     console.log("에러객체", error);
     if (error) {

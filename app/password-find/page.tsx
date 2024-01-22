@@ -1,4 +1,3 @@
-import CustomInput from "@/components/element/CustomInput";
 import FindForm from "@/components/pageComp/passwordFindComp/FindForm";
 import { Box, Text } from "@chakra-ui/react";
 
@@ -7,7 +6,6 @@ const Page = () => {
     <Box
       width={"80%"}
       margin={"auto"}
-      // minHeight={410}
       marginY={"20px"}
       borderColor={"borderColor"}
       borderWidth={1}

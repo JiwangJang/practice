@@ -1,10 +1,14 @@
 "use client";
 
-import { Box, Center, FormControl, FormLabel, Input } from "@chakra-ui/react";
-import { useState } from "react";
+import { Box } from "@chakra-ui/react";
 import LoginForm from "./ProfileComp/LoginForm";
+import { AuthContext } from "@/components/AuthProvider";
+import { useContext } from "react";
+import ProfilePart from "./ProfileComp/ProfilePart";
 
 const Profile = () => {
+  const { isAuthorized } = useContext(AuthContext);
+
   return (
     <Box
       width={"100%"}
@@ -15,7 +19,7 @@ const Profile = () => {
       paddingX={"38px"}
       paddingY={"30px"}
     >
-      <LoginForm />
+      {isAuthorized ? <ProfilePart /> : <LoginForm />}
     </Box>
   );
 };
